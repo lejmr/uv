@@ -9,12 +9,12 @@ pub use keyring::KeyringProvider;
 pub use middleware::AuthMiddleware;
 use realm::Realm;
 
+mod auth_config;
 mod cache;
 mod credentials;
 mod keyring;
 mod middleware;
 mod realm;
-
 // TODO(zanieb): Consider passing a cache explicitly throughout
 
 /// Global authentication cache for a uv invocation

@@ -2,6 +2,7 @@ use base64::prelude::BASE64_STANDARD;
 use base64::read::DecoderReader;
 use base64::write::EncoderWriter;
 
+use keyring::Entry;
 use netrc::Netrc;
 use reqwest::header::HeaderValue;
 use reqwest::Request;
@@ -9,6 +10,7 @@ use std::io::Read;
 use std::io::Write;
 use url::Url;
 
+use crate::auth_config::load_username_for_index;
 use uv_static::EnvVars;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -155,6 +157,30 @@ impl Credentials {
         }
     }
 
+    // Function generating secret name in the keyring
+    pub fn keyring_secret_name(name: &str) -> String {
+        format!("uv-repository-{name}")
+    }
+
+    /// Extract the [`Credentials`] from the keyring-rs, given a named source.
+    ///
+    /// For example, given a name of `"pytorch"`, search for `uv-repository-pytorch` secret with
+    /// username that is saved for given index in auth.toml and password that is saved in keyring.
+    pub fn from_keyring(name: impl AsRef<str>) -> Option<Self> {
+        // Pickup username from auth.toml
+        let username = load_username_for_index(name.as_ref())?;
+        let secret_name = Self::keyring_secret_name(name.as_ref());
+
+        // Pickup password from keyring
+        match Entry::new(secret_name.as_str(), &username) {
+            Ok(entry) => match entry.get_password() {
+                Ok(password) => Some(Self::new(Some(username.to_string()), Some(password))),
+                Err(_) => None,
+            },
+            Err(_) => None,
+        }
+    }
+
     /// Parse [`Credentials`] from an HTTP request, if any.
     ///
     /// Only HTTP Basic Authentication is supported.
@@ -247,9 +273,9 @@ impl Credentials {
 
 #[cfg(test)]
 mod tests {
-    use insta::assert_debug_snapshot;
-
     use super::*;
+    use insta::assert_debug_snapshot;
+    use keyring::{mock, set_default_credential_builder};
 
     #[test]
     fn from_url_no_credentials() {
@@ -352,5 +378,24 @@ mod tests {
 
         assert_debug_snapshot!(header, @r###""Basic dXNlcjpwYXNzd29yZD09""###);
         assert_eq!(Credentials::from_header_value(&header), Some(credentials));
+    }
+
+    #[test]
+    fn from_keyring() {
+        // Mock data in keystore
+        // set_default_credential_builder(mock::default_credential_builder());
+        // use keyring::{mock, mock::MockCredential, Entry, Error};
+        // let secret_name = Credentials::keyring_secret_name("pytorch").as_str();
+        // let entry = Entry::new(secret_name, "user").unwrap();
+        // entry.set_password("password").unwrap();
+        /*
+        let mock: &MockCredential = entry.get_credential().downcast_ref().unwrap();
+        mock.set_error(Error::Invalid("mock error".to_string(), "takes precedence".to_string()));
+        entry.set_password("test").expect_err("error will override");
+        entry.set_password("test").expect("error has been cleared");
+        */
+
+        let credentials = Credentials::from_keyring("foo").unwrap();
+        assert_eq!(credentials.username(), Some("pytorch"));
     }
 }

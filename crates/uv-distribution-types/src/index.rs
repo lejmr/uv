@@ -161,6 +161,11 @@ impl Index {
             if let Some(credentials) = Credentials::from_env(name.to_env_var()) {
                 return Some(credentials);
             }
+
+            // If ENVs are not set, try to use keyring.. to be as close to poetry as possible we should check that keyring is enabled.
+            if let Some(credentials) = Credentials::from_keyring(name) {
+                return Some(credentials);
+            }
         }
 
         // Otherwise, extract the credentials from the URL.
