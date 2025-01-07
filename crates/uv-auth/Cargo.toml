@@ -32,7 +32,8 @@ toml = { workspace = true }
 
 
 serde = { version = "1.0.217", features = ["derive"] }
-keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+keyring = { workspace = true }
+
 
 [dev-dependencies]
 tempfile = { workspace = true }

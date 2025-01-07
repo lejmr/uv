@@ -15,11 +15,13 @@ use owo_colors::OwoColorize;
 use settings::PipTreeSettings;
 use tokio::task::spawn_blocking;
 use tracing::{debug, instrument};
+use url::quirks::password;
 use uv_cache::{Cache, Refresh};
 use uv_cache_info::Timestamp;
 use uv_cli::{
     compat::CompatArgs, BuildBackendCommand, CacheCommand, CacheNamespace, Cli, Commands,
-    PipCommand, PipNamespace, ProjectCommand,
+    IndexCommand, IndexCredentialsCommand, IndexNamespace, PipCommand, PipNamespace,
+    ProjectCommand,
 };
 use uv_cli::{PythonCommand, PythonNamespace, ToolCommand, ToolNamespace, TopLevelArgs};
 #[cfg(feature = "self-update")]
@@ -32,12 +34,13 @@ use uv_static::EnvVars;
 use uv_warnings::{warn_user, warn_user_once};
 use uv_workspace::{DiscoveryOptions, Workspace};
 
+use crate::commands::index::credentials_add;
 use crate::commands::{ExitStatus, RunCommand, ToolRunCommand};
 use crate::printer::Printer;
 use crate::settings::{
-    CacheSettings, GlobalSettings, PipCheckSettings, PipCompileSettings, PipFreezeSettings,
-    PipInstallSettings, PipListSettings, PipShowSettings, PipSyncSettings, PipUninstallSettings,
-    PublishSettings,
+    CacheSettings, GlobalSettings, IndexSettings, PipCheckSettings, PipCompileSettings,
+    PipFreezeSettings, PipInstallSettings, PipListSettings, PipShowSettings, PipSyncSettings,
+    PipUninstallSettings, PublishSettings,
 };
 
 pub(crate) mod commands;
@@ -716,6 +719,19 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
                 &cache,
                 printer,
             )
+        }
+        Commands::Index(IndexNamespace {
+            command: IndexCommand::Credentials(IndexCredentialsCommand::Add(args)),
+        }) => {
+            let IndexSettings {
+                name,
+                username,
+                password,
+                url,
+            } = IndexSettings::resolve(args, filesystem);
+
+            credentials_add(&name, &username, password.as_deref());
+            return Ok(ExitStatus::Success);
         }
         Commands::Cache(CacheNamespace {
             command: CacheCommand::Clean(args),

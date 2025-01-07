@@ -9,7 +9,7 @@ pub use keyring::KeyringProvider;
 pub use middleware::AuthMiddleware;
 use realm::Realm;
 
-mod auth_config;
+pub mod auth_config;
 mod cache;
 mod credentials;
 mod keyring;

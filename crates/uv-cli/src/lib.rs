@@ -389,6 +389,12 @@ pub enum Commands {
         after_long_help = ""
     )]
     Pip(PipNamespace),
+    /// Manage Python Indexes.
+    #[command(
+        after_help = "Use `uv help index` for more details.",
+        after_long_help = ""
+    )]
+    Index(IndexNamespace),
     /// Create a virtual environment.
     ///
     /// By default, creates a virtual environment named `.venv` in the working
@@ -633,6 +639,55 @@ pub enum PipCommand {
         after_long_help = ""
     )]
     Check(PipCheckArgs),
+}
+
+#[derive(Args)]
+#[allow(clippy::struct_excessive_bools)]
+pub struct IndexNamespace {
+    #[command(subcommand)]
+    pub command: IndexCommand,
+}
+
+#[derive(Subcommand)]
+pub enum IndexCommand {
+    /// Manage keyring credentials for an index.
+    #[command(subcommand)]
+    Credentials(IndexCredentialsCommand),
+}
+
+#[derive(Subcommand)]
+pub enum IndexCredentialsCommand {
+    // #[command(
+    //     after_help = "Use `uv help index credentials list` for more details.",
+    //     after_long_help = ""
+    // )]
+    // List(IndexCredentialsArgs),
+    /// Add credentials for an index.
+    #[command(
+        after_help = "Use `uv help index credentials add` for more details.",
+        after_long_help = ""
+    )]
+    Add(IndexCredentialsArgs),
+    // #[command(
+    //     after_help = "Use `uv help index credentials del` for more details.",
+    //     after_long_help = ""
+    // )]
+    // Del(IndexCredentialsArgs),
+}
+
+#[derive(Args)]
+pub struct IndexCredentialsArgs {
+    /// The name of the index
+    #[arg(long)]
+    pub name: String,
+
+    /// The username that should be used for the index
+    #[arg(long)]
+    pub username: String,
+
+    /// The password that should be user for the index
+    #[arg(long, required(false))]
+    pub password: Option<String>,
 }
 
 #[derive(Subcommand)]

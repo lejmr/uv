@@ -64,6 +64,7 @@ mod cache_dir;
 mod cache_prune;
 mod diagnostics;
 mod help;
+pub(crate) mod index;
 pub(crate) mod pip;
 mod project;
 mod publish;

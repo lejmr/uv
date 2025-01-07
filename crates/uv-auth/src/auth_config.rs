@@ -1,19 +1,21 @@
+use crate::Credentials;
+use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use toml;
 use uv_dirs::user_state_dir;
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, Debug)]
-struct AuthConfig {
+pub struct AuthConfig {
     pub index: HashMap<String, Index>,
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Debug)]
-struct Index {
+pub struct Index {
     pub username: String,
 }
 
-fn get_auth_config() -> AuthConfig {
+pub fn get_auth_config() -> AuthConfig {
     // Determine path to configuration file
     let config_file = user_state_dir()
         .ok_or("Could not determine user state directory")
@@ -43,4 +45,11 @@ pub(crate) fn load_username_for_index(index: &str) -> Option<String> {
         Some(index) => Some(index.username.clone()),
         None => None,
     }
+}
+
+pub fn update_auth_config(index: &str, username: &str, password: &str) {
+    let auth_config = get_auth_config();
+
+    // Write configuration to disk
+    // std::fs::write(config_file, config).expect("Could not write configuration to disk");
 }

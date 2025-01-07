@@ -9,8 +9,8 @@ use uv_cache::{CacheArgs, Refresh};
 use uv_cli::comma::CommaSeparatedRequirements;
 use uv_cli::{
     options::{flag, resolver_installer_options, resolver_options},
-    AuthorFrom, BuildArgs, ExportArgs, PublishArgs, PythonDirArgs, ResolverInstallerArgs,
-    ToolUpgradeArgs,
+    AuthorFrom, BuildArgs, ExportArgs, IndexCredentialsArgs, PublishArgs, PythonDirArgs,
+    ResolverInstallerArgs, ToolUpgradeArgs,
 };
 use uv_cli::{
     AddArgs, ColorChoice, ExternalCommand, GlobalArgs, InitArgs, ListFormat, LockArgs, Maybe,
@@ -26,7 +26,7 @@ use uv_configuration::{
     NoBinary, NoBuild, PreviewMode, ProjectBuildBackend, Reinstall, RequiredVersion,
     SourceStrategy, TargetTriple, TrustedHost, TrustedPublishing, Upgrade, VersionControlSystem,
 };
-use uv_distribution_types::{DependencyMetadata, Index, IndexLocations, IndexUrl};
+use uv_distribution_types::{DependencyMetadata, Index, IndexLocations, IndexName, IndexUrl};
 use uv_install_wheel::linker::LinkMode;
 use uv_normalize::PackageName;
 use uv_pep508::{ExtraName, RequirementOrigin};
@@ -2836,6 +2836,55 @@ impl PipSettings {
                 )),
             ),
             install_mirrors,
+        }
+    }
+}
+
+pub(crate) struct IndexSettings {
+    // CLI only settings
+    pub(crate) name: String,
+    pub(crate) username: String,
+    pub(crate) password: Option<String>,
+    pub(crate) url: Option<String>,
+}
+
+impl IndexSettings {
+    /// Resolve the [`IndexSettings`] from the CLI and filesystem configuration.
+    pub(crate) fn resolve(
+        args: IndexCredentialsArgs,
+        filesystem: Option<FilesystemOptions>,
+    ) -> Self {
+        //  think all this can go away!
+        let Options { top_level, .. } = filesystem
+            .map(FilesystemOptions::into_options)
+            .unwrap_or_default();
+
+        let ResolverInstallerOptions {
+            // keyring_provider,
+            index,
+            ..
+        } = top_level;
+
+        // Pickup expected index from global config
+        let url: Option<String> = match index {
+            None => None,
+            Some(index) => {
+                for i in index {
+                    if i.name.is_some() {
+                        return &String::from("fdfd");
+                    }
+                }
+                None
+            },
+        };
+
+
+        // Only this is useful at the moment
+        Self {
+            name: args.name,
+            username: args.username,
+            password: args.password,
+            url: None,
         }
     }
 }
