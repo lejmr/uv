@@ -2845,7 +2845,7 @@ pub(crate) struct IndexSettings {
     pub(crate) name: String,
     pub(crate) username: String,
     pub(crate) password: Option<String>,
-    pub(crate) url: Option<String>,
+    pub(crate) index: Option<Index>,
 }
 
 impl IndexSettings {
@@ -2866,25 +2866,30 @@ impl IndexSettings {
         } = top_level;
 
         // Pickup expected index from global config
-        let url: Option<String> = match index {
+        let to_return_index: Option<Index> = match index {
             None => None,
             Some(index) => {
+                let mut int_index = None;
                 for i in index {
-                    if i.name.is_some() {
-                        return &String::from("fdfd");
+                    match i.name {
+                        Some(ref index_name) => {
+                            if index_name.to_string() == args.name {
+                                int_index = Some(i.clone());
+                            }
+                        }
+                        None => {}
                     }
                 }
-                None
-            },
+                int_index
+            }
         };
-
 
         // Only this is useful at the moment
         Self {
             name: args.name,
             username: args.username,
             password: args.password,
-            url: None,
+            index: to_return_index,
         }
     }
 }

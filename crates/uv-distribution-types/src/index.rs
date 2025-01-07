@@ -163,7 +163,7 @@ impl Index {
             }
 
             // If ENVs are not set, try to use keyring.. to be as close to poetry as possible we should check that keyring is enabled.
-            if let Some(credentials) = Credentials::from_keyring(name) {
+            if let Some(credentials) = Credentials::from_keyring(name, format!("{}", self.url)) {
                 return Some(credentials);
             }
         }

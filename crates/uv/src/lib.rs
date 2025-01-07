@@ -727,10 +727,14 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
                 name,
                 username,
                 password,
-                url,
+                index,
             } = IndexSettings::resolve(args, filesystem);
 
-            credentials_add(&name, &username, password.as_deref());
+            if index.is_none() {
+                panic!("Index {} is not defined in pyproject.toml", name);
+            }
+
+            credentials_add(&index.unwrap(), &username, password.as_deref());
             return Ok(ExitStatus::Success);
         }
         Commands::Cache(CacheNamespace {

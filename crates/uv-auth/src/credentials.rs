@@ -157,22 +157,16 @@ impl Credentials {
         }
     }
 
-    // Function generating secret name in the keyring
-    pub fn keyring_secret_name(name: &str) -> String {
-        format!("uv-repository-{name}")
-    }
-
     /// Extract the [`Credentials`] from the keyring-rs, given a named source.
     ///
     /// For example, given a name of `"pytorch"`, search for `uv-repository-pytorch` secret with
     /// username that is saved for given index in auth.toml and password that is saved in keyring.
-    pub fn from_keyring(name: impl AsRef<str>) -> Option<Self> {
+    pub fn from_keyring(name: impl AsRef<str>, url: String) -> Option<Self> {
         // Pickup username from auth.toml
         let username = load_username_for_index(name.as_ref())?;
-        let secret_name = Self::keyring_secret_name(name.as_ref());
 
         // Pickup password from keyring
-        match Entry::new(secret_name.as_str(), &username) {
+        match Entry::new(&url, &username) {
             Ok(entry) => match entry.get_password() {
                 Ok(password) => Some(Self::new(Some(username.to_string()), Some(password))),
                 Err(_) => None,

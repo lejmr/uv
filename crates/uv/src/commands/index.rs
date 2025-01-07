@@ -4,11 +4,16 @@ use keyring::Entry;
 use uv_auth::auth_config::{get_auth_config, Index};
 use uv_auth::Credentials;
 use uv_dirs::user_state_dir;
+use uv_distribution_types::Index as IndexIndex;
 
-pub fn credentials_add(index: &str, username: &str, password: Option<&str>) {
+pub fn credentials_add(index: &IndexIndex, username: &str, password: Option<&str>) {
+    // We know that the index has name defined!
+    let index_name = index.name.as_ref().unwrap().to_string();
+    let url = format!("{}", index.url);
+
     let mut config = get_auth_config();
     config.index.insert(
-        index.to_string(),
+        index_name,
         Index {
             username: username.to_string(),
         },
@@ -30,21 +35,24 @@ pub fn credentials_add(index: &str, username: &str, password: Option<&str>) {
         Some(p) => p,
         None => {
             let term = Term::stdout();
-            let password = uv_console::password("Enter password: ", &term).expect("Could not read password");
+            let password =
+                uv_console::password("Enter password: ", &term).expect("Could not read password");
             &password.clone()
-        },
-    };
-    match Entry::new(&Credentials::keyring_secret_name(index), &username) {
-        Ok(entry) => {
-            match entry.get_password() {
-                Ok(_) => {
-                    entry.set_password(password).expect("Could not set password");
-                }
-                Err(_) => {
-                    entry.set_password(password).expect("Could not set password");
-                }
-            }
         }
+    };
+    match Entry::new(&url, &username) {
+        Ok(entry) => match entry.get_password() {
+            Ok(_) => {
+                entry
+                    .set_password(password)
+                    .expect("Could not set password");
+            }
+            Err(_) => {
+                entry
+                    .set_password(password)
+                    .expect("Could not set password");
+            }
+        },
         Err(e) => {
             panic!("Could not create keyring entry: {}", e);
         }
