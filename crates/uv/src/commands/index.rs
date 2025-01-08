@@ -1,7 +1,7 @@
 use anyhow::Context;
 use console::Term;
 use keyring::Entry;
-use uv_auth::auth_config::{get_auth_config, Index};
+use uv_auth::auth_config::{get_auth_config, AuthConfig, Index};
 use uv_auth::Credentials;
 use uv_dirs::user_state_dir;
 use uv_distribution_types::Index as IndexIndex;
@@ -55,6 +55,36 @@ pub fn credentials_add(index: &IndexIndex, username: &str, password: Option<&str
         },
         Err(e) => {
             panic!("Could not create keyring entry: {}", e);
+        }
+    }
+}
+
+pub fn credentials_list(auth_config: AuthConfig, configured_index: Vec<IndexIndex>) {
+    /// List all credentials
+    for ind in configured_index {
+        if let Some(name) = ind.name {
+            let no_credentials_msg = format!("Index: '{}' no credentials.", name);
+            if let Some(auth_index) = auth_config.index.get(&name.to_string()) {
+                let username = auth_index.clone().username.clone();
+                let url = format!("{}", ind.url);
+                // Console output for each named index
+                match Entry::new(&url, &username)
+                    .expect("Unable to access keyring.")
+                    .get_password()
+                {
+                    Ok(_) => {
+                        println!(
+                            "Index: '{}' authenticates with username '{}'.",
+                            name, username
+                        );
+                    }
+                    Err(_) => {
+                        println!("{}", no_credentials_msg);
+                    }
+                }
+            } else {
+                println!("{}", no_credentials_msg);
+            }
         }
     }
 }

@@ -36,7 +36,7 @@ use uv_static::EnvVars;
 use uv_warnings::{warn_user, warn_user_once};
 use uv_workspace::{DiscoveryOptions, Workspace};
 
-use crate::commands::index::credentials_add;
+use crate::commands::index::{credentials_add, credentials_list};
 use crate::commands::{ExitStatus, RunCommand, ToolRunCommand};
 use crate::printer::Printer;
 use crate::settings::{
@@ -742,7 +742,6 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
         Commands::Index(IndexNamespace {
             command: IndexCommand::Credentials(IndexCredentialsCommand::List(args)),
         }) => {
-
             // Extract all indexes from pyproject.toml
             let Options { top_level, .. } = filesystem
                 .map(FilesystemOptions::into_options)
@@ -754,36 +753,11 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
             } = top_level;
             // Load auth.toml
             let auth_config = get_auth_config();
-            // Loop over indexes with name configured, so we can look up in auth_config
+            // Visualise all indexes
             match index {
-                Some(all_indexes) => {
-                    for ind in all_indexes {
-                        if let Some(name) = ind.name {
-                            if let Some(auth_index) = auth_config.index.get(&name.to_string()){
-                                // print!("Index: {} has username '{:?}' ", name, username);
-                                let username = auth_index.clone().username.clone();
-                                let url = format!("{}", ind.url);
-
-                                match Entry::new(&url, &username)?.get_password() {
-                                    Ok(_) => {
-                                        println!("Index: '{}' is configured with username '{}'.", name, username);
-                                    },
-                                    Err(_) => {
-                                        println!("Index: '{}' no credentials.", name);
-                                    }
-                                }
-
-                            } else {
-                                println!("Index: '{}' no credentials.", name);
-                            }
-                        }
-                    }
-                }
-                None => {
-                    println!("No extra indexes are configured in pyproject.toml.")
-                }
+                Some(indexes) => credentials_list(auth_config, indexes),
+                None => println!("No extra indexes configured in 'pyproject.toml'"),
             }
-
             return Ok(ExitStatus::Success);
         }
         Commands::Cache(CacheNamespace {

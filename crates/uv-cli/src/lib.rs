@@ -691,7 +691,6 @@ pub struct IndexCredentialsAddArgs {
     pub password: Option<String>,
 }
 
-
 #[derive(Args)]
 pub struct IndexCredentialsListArgs {
     // Empty for now
