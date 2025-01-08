@@ -1,5 +1,3 @@
-use crate::Credentials;
-use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use toml;
@@ -15,12 +13,16 @@ pub struct Index {
     pub username: String,
 }
 
-pub fn get_auth_config() -> AuthConfig {
-    // Determine path to configuration file
-    let config_file = user_state_dir()
+fn get_auth_config_path() -> std::path::PathBuf {
+    user_state_dir()
         .ok_or("Could not determine user state directory")
         .unwrap()
-        .join("auth.toml");
+        .join("auth.toml")
+}
+
+pub fn get_auth_config() -> AuthConfig {
+    // Determine path to configuration file
+    let config_file = get_auth_config_path();
 
     // Load file from disk
     match std::fs::read_to_string(config_file) {
@@ -47,9 +49,18 @@ pub(crate) fn load_username_for_index(index: &str) -> Option<String> {
     }
 }
 
-pub fn update_auth_config(index: &str, username: &str, password: &str) {
-    let auth_config = get_auth_config();
-
+pub fn update_auth_config(index_name: &str, index_url: &str, username: &str, password: &str) {
+    // Update save configuration in memory
+    let mut config = get_auth_config();
+    config.index.insert(
+        index_name.to_string(),
+        Index {
+            username: username.to_string(),
+        },
+    );
+    // Serialize configuration to TOML
+    let config_string = toml::ser::to_string(&config).expect("Could not serialize configuration");
     // Write configuration to disk
-    // std::fs::write(config_file, config).expect("Could not write configuration to disk");
+    std::fs::write(get_auth_config_path(), config_string)
+        .expect("Could not write configuration to disk");
 }
