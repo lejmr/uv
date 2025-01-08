@@ -9,7 +9,7 @@ use uv_cache::{CacheArgs, Refresh};
 use uv_cli::comma::CommaSeparatedRequirements;
 use uv_cli::{
     options::{flag, resolver_installer_options, resolver_options},
-    AuthorFrom, BuildArgs, ExportArgs, IndexCredentialsAddArgs, PublishArgs, PythonDirArgs,
+    AuthorFrom, BuildArgs, ExportArgs, IndexCredentialsSetArgs, PublishArgs, PythonDirArgs,
     ResolverInstallerArgs, ToolUpgradeArgs,
 };
 use uv_cli::{
@@ -2851,7 +2851,7 @@ pub(crate) struct IndexSettings {
 impl IndexSettings {
     /// Resolve the [`IndexSettings`] from the CLI and filesystem configuration.
     pub(crate) fn resolve(
-        args: IndexCredentialsAddArgs,
+        args: IndexCredentialsSetArgs,
         filesystem: Option<FilesystemOptions>,
     ) -> Self {
         //  think all this can go away!
@@ -2866,23 +2866,13 @@ impl IndexSettings {
         } = top_level;
 
         // Pickup expected index from global config
-        let to_return_index: Option<Index> = match index {
-            None => None,
-            Some(index) => {
-                let mut int_index = None;
-                for i in index {
-                    match i.name {
-                        Some(ref index_name) => {
-                            if index_name.to_string() == args.name {
-                                int_index = Some(i.clone());
-                            }
-                        }
-                        None => {}
-                    }
-                }
-                int_index
-            }
-        };
+        let to_return_index = index.and_then(|all_indexes| {
+            all_indexes.into_iter().find(|i| {
+                i.name
+                    .as_ref()
+                    .map_or(false, |name| name.to_string() == args.name)
+            })
+        });
 
         // Only this is useful at the moment
         Self {

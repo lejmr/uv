@@ -1,12 +1,10 @@
-use anyhow::Context;
 use console::Term;
 use keyring::Entry;
 use uv_auth::auth_config::{get_auth_config, AuthConfig, Index};
-use uv_auth::Credentials;
 use uv_dirs::user_state_dir;
 use uv_distribution_types::Index as IndexIndex;
 
-pub fn credentials_add(index: &IndexIndex, username: &str, password: Option<&str>) {
+pub fn credentials_set(index: &IndexIndex, username: &str, password: Option<&str>) {
     // We know that the index has name defined!
     let index_name = index.name.as_ref().unwrap().to_string();
     let url = format!("{}", index.url);
@@ -87,4 +85,25 @@ pub fn credentials_list(auth_config: AuthConfig, configured_index: Vec<IndexInde
             }
         }
     }
+}
+
+pub fn credentials_unset(index: &IndexIndex) {
+    let index_name = index.name.as_ref().unwrap().to_string();
+    let mut config = get_auth_config();
+    // config.index.remove(&index_name);
+    // let config_file = user_state_dir()
+    //     .ok_or("Could not determine user state directory")
+    //     .unwrap()
+    //     .join("auth.toml");
+    // let config = toml::ser::to_string(&config).expect("Could not serialize configuration");
+    // std::fs::write(config_file, config).expect("Could not write configuration to disk");
+    // let url = format!("{}", index.url);
+    // match Entry::new(&url, &index_name) {
+    //     Ok(entry) => {
+    //         entry.delete().expect("Could not delete keyring entry");
+    //     }
+    //     Err(e) => {
+    //         panic!("Could not create keyring entry: {}", e);
+    //     }
+    // }
 }

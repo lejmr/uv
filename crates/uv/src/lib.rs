@@ -36,7 +36,7 @@ use uv_static::EnvVars;
 use uv_warnings::{warn_user, warn_user_once};
 use uv_workspace::{DiscoveryOptions, Workspace};
 
-use crate::commands::index::{credentials_add, credentials_list};
+use crate::commands::index::{credentials_list, credentials_set};
 use crate::commands::{ExitStatus, RunCommand, ToolRunCommand};
 use crate::printer::Printer;
 use crate::settings::{
@@ -723,7 +723,7 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
             )
         }
         Commands::Index(IndexNamespace {
-            command: IndexCommand::Credentials(IndexCredentialsCommand::Add(args)),
+            command: IndexCommand::Credentials(IndexCredentialsCommand::Set(args)),
         }) => {
             let IndexSettings {
                 name,
@@ -736,7 +736,7 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
                 panic!("Index {} is not defined in pyproject.toml", name);
             }
 
-            credentials_add(&index.unwrap(), &username, password.as_deref());
+            credentials_set(&index.unwrap(), &username, password.as_deref());
             return Ok(ExitStatus::Success);
         }
         Commands::Index(IndexNamespace {
@@ -758,6 +758,11 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
                 Some(indexes) => credentials_list(auth_config, indexes),
                 None => println!("No extra indexes configured in 'pyproject.toml'"),
             }
+            return Ok(ExitStatus::Success);
+        }
+        Commands::Index(IndexNamespace {
+            command: IndexCommand::Credentials(IndexCredentialsCommand::Unset(args)),
+        }) => {
             return Ok(ExitStatus::Success);
         }
         Commands::Cache(CacheNamespace {

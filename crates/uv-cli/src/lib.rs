@@ -663,21 +663,22 @@ pub enum IndexCredentialsCommand {
         after_long_help = ""
     )]
     List(IndexCredentialsListArgs),
-    /// Add credentials for an index.
+    /// Set credentials for an index.
     #[command(
-        after_help = "Use `uv help index credentials add` for more details.",
+        after_help = "Use `uv help index credentials set` for more details.",
         after_long_help = ""
     )]
-    Add(IndexCredentialsAddArgs),
-    // #[command(
-    //     after_help = "Use `uv help index credentials del` for more details.",
-    //     after_long_help = ""
-    // )]
-    // Del(IndexCredentialsArgs),
+    Set(IndexCredentialsSetArgs),
+    /// Unsets credentials for an index.
+    #[command(
+        after_help = "Use `uv help index credentials unset` for more details.",
+        after_long_help = ""
+    )]
+    Unset(IndexCredentialsUnsetArgs),
 }
 
 #[derive(Args)]
-pub struct IndexCredentialsAddArgs {
+pub struct IndexCredentialsSetArgs {
     /// The name of the index
     #[arg(long)]
     pub name: String,
@@ -694,6 +695,13 @@ pub struct IndexCredentialsAddArgs {
 #[derive(Args)]
 pub struct IndexCredentialsListArgs {
     // Empty for now
+}
+
+#[derive(Args)]
+pub struct IndexCredentialsUnsetArgs {
+    /// The name of the index
+    #[arg(long)]
+    pub name: String,
 }
 
 #[derive(Subcommand)]
