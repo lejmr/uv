@@ -657,17 +657,18 @@ pub enum IndexCommand {
 
 #[derive(Subcommand)]
 pub enum IndexCredentialsCommand {
-    // #[command(
-    //     after_help = "Use `uv help index credentials list` for more details.",
-    //     after_long_help = ""
-    // )]
-    // List(IndexCredentialsArgs),
+    /// List indexes and indicate whether that index has credentials set.
+    #[command(
+        after_help = "Use `uv help index credentials list` for more details.",
+        after_long_help = ""
+    )]
+    List(IndexCredentialsListArgs),
     /// Add credentials for an index.
     #[command(
         after_help = "Use `uv help index credentials add` for more details.",
         after_long_help = ""
     )]
-    Add(IndexCredentialsArgs),
+    Add(IndexCredentialsAddArgs),
     // #[command(
     //     after_help = "Use `uv help index credentials del` for more details.",
     //     after_long_help = ""
@@ -676,7 +677,7 @@ pub enum IndexCredentialsCommand {
 }
 
 #[derive(Args)]
-pub struct IndexCredentialsArgs {
+pub struct IndexCredentialsAddArgs {
     /// The name of the index
     #[arg(long)]
     pub name: String,
@@ -688,6 +689,12 @@ pub struct IndexCredentialsArgs {
     /// The password that should be user for the index
     #[arg(long, required(false))]
     pub password: Option<String>,
+}
+
+
+#[derive(Args)]
+pub struct IndexCredentialsListArgs {
+    // Empty for now
 }
 
 #[derive(Subcommand)]

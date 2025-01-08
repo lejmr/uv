@@ -11,11 +11,13 @@ use anstream::eprintln;
 use anyhow::{bail, Context, Result};
 use clap::error::{ContextKind, ContextValue};
 use clap::{CommandFactory, Parser};
+use keyring::Entry;
 use owo_colors::OwoColorize;
 use settings::PipTreeSettings;
 use tokio::task::spawn_blocking;
 use tracing::{debug, instrument};
 use url::quirks::password;
+use uv_auth::auth_config::get_auth_config;
 use uv_cache::{Cache, Refresh};
 use uv_cache_info::Timestamp;
 use uv_cli::{
@@ -29,7 +31,7 @@ use uv_cli::{SelfCommand, SelfNamespace, SelfUpdateArgs};
 use uv_fs::CWD;
 use uv_requirements::RequirementsSource;
 use uv_scripts::{Pep723Item, Pep723Metadata, Pep723Script};
-use uv_settings::{Combine, FilesystemOptions, Options};
+use uv_settings::{Combine, FilesystemOptions, Options, ResolverInstallerOptions};
 use uv_static::EnvVars;
 use uv_warnings::{warn_user, warn_user_once};
 use uv_workspace::{DiscoveryOptions, Workspace};
@@ -735,6 +737,53 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
             }
 
             credentials_add(&index.unwrap(), &username, password.as_deref());
+            return Ok(ExitStatus::Success);
+        }
+        Commands::Index(IndexNamespace {
+            command: IndexCommand::Credentials(IndexCredentialsCommand::List(args)),
+        }) => {
+
+            // Extract all indexes from pyproject.toml
+            let Options { top_level, .. } = filesystem
+                .map(FilesystemOptions::into_options)
+                .unwrap_or_default();
+            let ResolverInstallerOptions {
+                // keyring_provider,
+                index,
+                ..
+            } = top_level;
+            // Load auth.toml
+            let auth_config = get_auth_config();
+            // Loop over indexes with name configured, so we can look up in auth_config
+            match index {
+                Some(all_indexes) => {
+                    for ind in all_indexes {
+                        if let Some(name) = ind.name {
+                            if let Some(auth_index) = auth_config.index.get(&name.to_string()){
+                                // print!("Index: {} has username '{:?}' ", name, username);
+                                let username = auth_index.clone().username.clone();
+                                let url = format!("{}", ind.url);
+
+                                match Entry::new(&url, &username)?.get_password() {
+                                    Ok(_) => {
+                                        println!("Index: '{}' is configured with username '{}'.", name, username);
+                                    },
+                                    Err(_) => {
+                                        println!("Index: '{}' no credentials.", name);
+                                    }
+                                }
+
+                            } else {
+                                println!("Index: '{}' no credentials.", name);
+                            }
+                        }
+                    }
+                }
+                None => {
+                    println!("No extra indexes are configured in pyproject.toml.")
+                }
+            }
+
             return Ok(ExitStatus::Success);
         }
         Commands::Cache(CacheNamespace {

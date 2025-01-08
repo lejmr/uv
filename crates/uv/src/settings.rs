@@ -9,7 +9,7 @@ use uv_cache::{CacheArgs, Refresh};
 use uv_cli::comma::CommaSeparatedRequirements;
 use uv_cli::{
     options::{flag, resolver_installer_options, resolver_options},
-    AuthorFrom, BuildArgs, ExportArgs, IndexCredentialsArgs, PublishArgs, PythonDirArgs,
+    AuthorFrom, BuildArgs, ExportArgs, IndexCredentialsAddArgs, PublishArgs, PythonDirArgs,
     ResolverInstallerArgs, ToolUpgradeArgs,
 };
 use uv_cli::{
@@ -2851,7 +2851,7 @@ pub(crate) struct IndexSettings {
 impl IndexSettings {
     /// Resolve the [`IndexSettings`] from the CLI and filesystem configuration.
     pub(crate) fn resolve(
-        args: IndexCredentialsArgs,
+        args: IndexCredentialsAddArgs,
         filesystem: Option<FilesystemOptions>,
     ) -> Self {
         //  think all this can go away!
