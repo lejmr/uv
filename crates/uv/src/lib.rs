@@ -11,12 +11,10 @@ use anstream::eprintln;
 use anyhow::{bail, Context, Result};
 use clap::error::{ContextKind, ContextValue};
 use clap::{CommandFactory, Parser};
-use keyring::Entry;
 use owo_colors::OwoColorize;
 use settings::PipTreeSettings;
 use tokio::task::spawn_blocking;
 use tracing::{debug, instrument};
-use url::quirks::password;
 use uv_auth::auth_config::get_auth_config;
 use uv_cache::{Cache, Refresh};
 use uv_cache_info::Timestamp;
@@ -763,6 +761,18 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
         Commands::Index(IndexNamespace {
             command: IndexCommand::Credentials(IndexCredentialsCommand::Unset(args)),
         }) => {
+            // Extract all indexes from pyproject.toml
+            let Options { top_level, .. } = filesystem
+                .map(FilesystemOptions::into_options)
+                .unwrap_or_default();
+            let ResolverInstallerOptions {
+                // keyring_provider,
+                index,
+                ..
+            } = top_level;
+            // Load auth.toml
+            let auth_config = get_auth_config();
+
             return Ok(ExitStatus::Success);
         }
         Commands::Cache(CacheNamespace {

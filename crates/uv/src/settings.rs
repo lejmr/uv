@@ -26,7 +26,7 @@ use uv_configuration::{
     NoBinary, NoBuild, PreviewMode, ProjectBuildBackend, Reinstall, RequiredVersion,
     SourceStrategy, TargetTriple, TrustedHost, TrustedPublishing, Upgrade, VersionControlSystem,
 };
-use uv_distribution_types::{DependencyMetadata, Index, IndexLocations, IndexName, IndexUrl};
+use uv_distribution_types::{DependencyMetadata, Index, IndexLocations, IndexUrl};
 use uv_install_wheel::linker::LinkMode;
 use uv_normalize::PackageName;
 use uv_pep508::{ExtraName, RequirementOrigin};

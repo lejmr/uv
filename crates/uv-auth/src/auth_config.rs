@@ -1,3 +1,4 @@
+use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use toml;
@@ -63,4 +64,13 @@ pub fn update_auth_config(index_name: &str, index_url: &str, username: &str, pas
     // Write configuration to disk
     std::fs::write(get_auth_config_path(), config_string)
         .expect("Could not write configuration to disk");
+    // Update keyring
+    match Entry::new(index_url, username) {
+        Ok(entry) => {
+            entry
+                .set_password(password)
+                .expect("Could not set password");
+        }
+        Err(e) => panic!("Could not create keyring entry: {}", e),
+    }
 }

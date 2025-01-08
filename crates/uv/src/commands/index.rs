@@ -1,7 +1,6 @@
 use console::Term;
 use keyring::Entry;
-use uv_auth::auth_config::{get_auth_config, update_auth_config, AuthConfig, Index};
-use uv_dirs::user_state_dir;
+use uv_auth::auth_config::{get_auth_config, update_auth_config, AuthConfig};
 use uv_distribution_types::Index as IndexIndex;
 
 pub fn credentials_set(index: &IndexIndex, username: &str, password: Option<&str>) {
@@ -10,7 +9,7 @@ pub fn credentials_set(index: &IndexIndex, username: &str, password: Option<&str
     let url = format!("{}", index.url);
 
     // TODO: this is not nice
-    let mut final_password: String;
+    let final_password: String;
     if password.is_none() {
         let term = Term::stdout();
         final_password =
@@ -36,7 +35,7 @@ pub fn credentials_set(index: &IndexIndex, username: &str, password: Option<&str
 }
 
 pub fn credentials_list(auth_config: AuthConfig, configured_index: Vec<IndexIndex>) {
-    /// List all credentials
+    // List all credentials
     for ind in configured_index {
         if let Some(name) = ind.name {
             let no_credentials_msg = format!("Index: '{}' no credentials.", name);
