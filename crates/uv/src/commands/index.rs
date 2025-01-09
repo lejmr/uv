@@ -1,9 +1,9 @@
 use console::Term;
 use keyring::Entry;
-use uv_auth::auth_config::{get_auth_config, update_auth_config, AuthConfig};
+use uv_auth::auth_config::{drop_index_entry, get_auth_config, update_auth_config, AuthConfig};
 use uv_distribution_types::Index as IndexIndex;
 
-pub fn credentials_set(index: &IndexIndex, username: &str, password: Option<&str>) {
+pub(crate) fn credentials_set(index: &IndexIndex, username: &str, password: Option<&str>) {
     // Collect all necessary information
     let index_name = index.name.as_ref().unwrap().to_string();
     let url = format!("{}", index.url);
@@ -34,13 +34,13 @@ pub fn credentials_set(index: &IndexIndex, username: &str, password: Option<&str
     }
 }
 
-pub fn credentials_list(auth_config: AuthConfig, configured_index: Vec<IndexIndex>) {
+pub(crate) fn credentials_list(auth_config: AuthConfig, configured_index: Vec<IndexIndex>) {
     // List all credentials
     for ind in configured_index {
         if let Some(name) = ind.name {
             let no_credentials_msg = format!("Index: '{}' no credentials.", name);
             if let Some(auth_index) = auth_config.index.get(&name.to_string()) {
-                let username = auth_index.clone().username.clone();
+                let username = auth_index.username.clone();
                 let url = format!("{}", ind.url);
                 // Console output for each named index
                 match Entry::new(&url, &username)
@@ -64,23 +64,17 @@ pub fn credentials_list(auth_config: AuthConfig, configured_index: Vec<IndexInde
     }
 }
 
-pub fn credentials_unset(index: &IndexIndex) {
-    let index_name = index.name.as_ref().unwrap().to_string();
-    let mut config = get_auth_config();
-    // config.index.remove(&index_name);
-    // let config_file = user_state_dir()
-    //     .ok_or("Could not determine user state directory")
-    //     .unwrap()
-    //     .join("auth.toml");
-    // let config = toml::ser::to_string(&config).expect("Could not serialize configuration");
-    // std::fs::write(config_file, config).expect("Could not write configuration to disk");
-    // let url = format!("{}", index.url);
-    // match Entry::new(&url, &index_name) {
-    //     Ok(entry) => {
-    //         entry.delete().expect("Could not delete keyring entry");
-    //     }
-    //     Err(e) => {
-    //         panic!("Could not create keyring entry: {}", e);
-    //     }
-    // }
+pub(crate) fn credentials_unset(name: &str, indexes: Vec<IndexIndex>) {
+    let auth_config = get_auth_config();
+    for ind in indexes {
+        if let Some(ref index_name) = ind.name {
+            if index_name.to_string() == name {
+                if let Some(_) = auth_config.index.get(&name.to_string()) {
+                    // At this point we are certain that such index has defined credentials in auth.toml
+                    drop_index_entry(name, &format!("{}", ind.url));
+                    break;
+                }
+            }
+        }
+    }
 }

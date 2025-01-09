@@ -74,3 +74,22 @@ pub fn update_auth_config(index_name: &str, index_url: &str, username: &str, pas
         Err(e) => panic!("Could not create keyring entry: {}", e),
     }
 }
+
+pub fn drop_index_entry(name: &str, index_url: &str) {
+    let mut auth_config = get_auth_config();
+    // Remove from keyring
+    if let Some(auth_index) = auth_config.index.get(name) {
+        match Entry::new(index_url, &auth_index.username) {
+            Ok(entry) => {
+                entry
+                    .delete_credential()
+                    .expect("Could not delete credential");
+            }
+            Err(e) => panic!("Could not access keyring: {}", e),
+        }
+    }
+    // Remove from auth.toml
+    auth_config.index.remove(name);
+    let config = toml::ser::to_string(&auth_config).expect("Could not serialize configuration");
+    std::fs::write(get_auth_config_path(), config).expect("Could not write configuration to disk");
+}

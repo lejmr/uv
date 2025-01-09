@@ -34,7 +34,7 @@ use uv_static::EnvVars;
 use uv_warnings::{warn_user, warn_user_once};
 use uv_workspace::{DiscoveryOptions, Workspace};
 
-use crate::commands::index::{credentials_list, credentials_set};
+use crate::commands::index::{credentials_list, credentials_set, credentials_unset};
 use crate::commands::{ExitStatus, RunCommand, ToolRunCommand};
 use crate::printer::Printer;
 use crate::settings::{
@@ -738,7 +738,7 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
             return Ok(ExitStatus::Success);
         }
         Commands::Index(IndexNamespace {
-            command: IndexCommand::Credentials(IndexCredentialsCommand::List(args)),
+            command: IndexCommand::Credentials(IndexCredentialsCommand::List(_args)),
         }) => {
             // Extract all indexes from pyproject.toml
             let Options { top_level, .. } = filesystem
@@ -770,8 +770,9 @@ async fn run(mut cli: Cli) -> Result<ExitStatus> {
                 index,
                 ..
             } = top_level;
-            // Load auth.toml
-            let auth_config = get_auth_config();
+            if let Some(indexes) = index {
+                credentials_unset(&args.name, indexes);
+            }
 
             return Ok(ExitStatus::Success);
         }
